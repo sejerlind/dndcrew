@@ -166,3 +166,65 @@ a.secondary {
     filter: invert();
   }
 }
+
+.crewList {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.crewMember {
+  display: flex;
+  align-items: center;
+  background: #1e1e1e;
+  padding: 1rem;
+  border-radius: 12px;
+  border: 2px solid #333;
+  transition: background 0.3s, transform 0.2s;
+}
+
+.crewMember:hover {
+  background: #2a2a2a;
+  transform: translateY(-2px);
+}
+
+.crewMember img {
+  border-radius: 8px;
+  margin-right: 1rem;
+}
+
+.hired {
+  opacity: 0.5;
+  border-color: #4caf50;
+}
+
+.hiredBadge {
+  background-color: #4caf50;
+  color: white;
+  font-size: 0.7rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 5px;
+  margin-left: 0.5rem;
+  vertical-align: middle;
+}
+
+.hireButton {
+  margin-top: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+  border: none;
+  border-radius: 6px;
+  background-color: #0070f3;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.hireButton:hover:not(:disabled) {
+  background-color: #0059c1;
+}
+
+.hireButton:disabled {
+  background-color: #555;
+  cursor: not-allowed;
+}

@@ -34,7 +34,6 @@ export default function Home() {
   const [selectedCrew, setSelectedCrew] = useState<CrewMember | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Preload hire sound
   const hireSound = typeof Audio !== 'undefined' ? new Audio('/hire-sound.mp3') : null;
 
   useEffect(() => {
@@ -114,7 +113,6 @@ export default function Home() {
     if (walletError || crewError) {
       setError(walletError || crewError);
     } else {
-      // ✅ Play sound
       hireSound?.play().catch((err) => {
         console.error('Failed to play sound:', err);
       });
@@ -122,6 +120,55 @@ export default function Home() {
       setCrewMembers((prev) =>
         prev.map((c) =>
           c.id === crew.id ? { ...c, is_hired: true } : c
+        )
+      );
+      setWallet({
+        ...wallet,
+        gold: newGold.toString(),
+        Sliver: newSilver.toString(),
+        cobber: newCopper.toString(),
+      });
+    }
+  };
+
+  const handleUnhire = async (crew: CrewMember) => {
+    if (!wallet) return;
+
+    const refundCopper = parseInt(crew.gold) * 10000 +
+      parseInt(crew.sliver ?? '0') * 100 +
+      parseInt(crew.cobber ?? '0');
+
+    const currentCopper = parseInt(wallet.gold) * 10000 +
+      parseInt(wallet.Sliver) * 100 +
+      parseInt(wallet.cobber);
+
+    const totalCopper = currentCopper + refundCopper;
+
+    const newGold = Math.floor(totalCopper / 10000);
+    const remainderAfterGold = totalCopper % 10000;
+    const newSilver = Math.floor(remainderAfterGold / 100);
+    const newCopper = remainderAfterGold % 100;
+
+    const { error: walletError } = await Supabase
+      .from('wallet')
+      .update({
+        gold: newGold.toString(),
+        Sliver: newSilver.toString(),
+        cobber: newCopper.toString(),
+      })
+      .eq('id', wallet.id);
+
+    const { error: crewError } = await Supabase
+      .from('crew')
+      .update({ is_hired: false })
+      .eq('id', crew.id);
+
+    if (walletError || crewError) {
+      setError(walletError || crewError);
+    } else {
+      setCrewMembers((prev) =>
+        prev.map((c) =>
+          c.id === crew.id ? { ...c, is_hired: false } : c
         )
       );
       setWallet({
@@ -181,16 +228,28 @@ export default function Home() {
                   <p>
                     Cost: {crew.gold} Gold, {crew.sliver ?? 0} Silver, {crew.cobber ?? 0} Copper
                   </p>
-                  <button
-                    className={styles.hireButton}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleHire(crew);
-                    }}
-                    disabled={crew.is_hired || !canAfford(crew)}
-                  >
-                    {crew.is_hired ? 'Hired' : 'Hire'}
-                  </button>
+                  {crew.is_hired ? (
+                    <button
+                      className={styles.hireButton}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleUnhire(crew);
+                      }}
+                    >
+                      Unhire
+                    </button>
+                  ) : (
+                    <button
+                      className={styles.hireButton}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleHire(crew);
+                      }}
+                      disabled={!canAfford(crew)}
+                    >
+                      Hire
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
@@ -219,16 +278,28 @@ export default function Home() {
                 <p><strong>Class:</strong> {selectedCrew.Class}</p>
                 <p><strong>Level Range:</strong> {selectedCrew.level}</p>
               </div>
-              <button
-                className={styles.hireButton}
-                onClick={() => {
-                  handleHire(selectedCrew);
-                  closeModal();
-                }}
-                disabled={selectedCrew.is_hired || !canAfford(selectedCrew)}
-              >
-                {selectedCrew.is_hired ? 'Hired' : 'Hire'}
-              </button>
+              {selectedCrew.is_hired ? (
+                <button
+                  className={styles.hireButton}
+                  onClick={() => {
+                    handleUnhire(selectedCrew);
+                    closeModal();
+                  }}
+                >
+                  Unhire
+                </button>
+              ) : (
+                <button
+                  className={styles.hireButton}
+                  onClick={() => {
+                    handleHire(selectedCrew);
+                    closeModal();
+                  }}
+                  disabled={!canAfford(selectedCrew)}
+                >
+                  Hire
+                </button>
+              )}
             </div>
           </div>
         )}

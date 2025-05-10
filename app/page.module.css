@@ -168,9 +168,11 @@ a.secondary {
 }
 
 .crewList {
-  display: flex;
-  flex-direction: column;
+    display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: repeat(2, 1fr);
   gap: 1.5rem;
+  width: 100%;
 }
 
 .crewMember {
@@ -290,7 +292,3 @@ a.secondary {
   cursor: not-allowed;
 }
 
-.modalContent p strong {
-  color: #333;
-  font-weight: 600;
-}

@@ -16,8 +16,8 @@ type CrewMember = {
   image: string;
   is_hired: boolean;
   description: string;
-    level: string;   // 👈 New field (e.g., "10–12")
-  Class: string;   // 👈 New field (e.g., "Wizard")
+  level: string;
+  Class: string;
 };
 
 type Wallet = {
@@ -34,11 +34,14 @@ export default function Home() {
   const [selectedCrew, setSelectedCrew] = useState<CrewMember | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // Preload hire sound
+  const hireSound = typeof Audio !== 'undefined' ? new Audio('/hire-sound.mp3') : null;
+
   useEffect(() => {
     const fetchCrew = async () => {
       const { data, error } = await Supabase
         .from('crew')
-        .select('id, Name, gold, sliver, cobber, image, is_hired, description, level, Class')
+        .select('id, Name, gold, sliver, cobber, image, is_hired, description, level, Class');
 
       if (error) setError(error);
       else if (data) setCrewMembers(data);
@@ -111,6 +114,11 @@ export default function Home() {
     if (walletError || crewError) {
       setError(walletError || crewError);
     } else {
+      // ✅ Play sound
+      hireSound?.play().catch((err) => {
+        console.error('Failed to play sound:', err);
+      });
+
       setCrewMembers((prev) =>
         prev.map((c) =>
           c.id === crew.id ? { ...c, is_hired: true } : c
@@ -195,23 +203,22 @@ export default function Home() {
             <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
               <button onClick={closeModal} className={styles.closeButton}>×</button>
               <h2>{selectedCrew.Name}</h2>
-               <Image
+              <Image
                 src={selectedCrew.image}
                 alt={selectedCrew.Name}
                 width={250}
                 height={250}
                 style={{ borderRadius: '8px', objectFit: 'cover' }}
               />
-
               <p>
                 Cost: {selectedCrew.gold} Gold, {selectedCrew.sliver ?? 0} Silver, {selectedCrew.cobber ?? 0} Copper
               </p>
               <p>Status: {selectedCrew.is_hired ? 'Hired' : 'Available'}</p>
-              <p style={{ marginTop: '1rem' }}>
-                <strong>Description:</strong> {selectedCrew.description}
+              <div style={{ marginTop: '1rem' }}>
+                <p><strong>Description:</strong> {selectedCrew.description}</p>
                 <p><strong>Class:</strong> {selectedCrew.Class}</p>
                 <p><strong>Level Range:</strong> {selectedCrew.level}</p>
-              </p>
+              </div>
               <button
                 className={styles.hireButton}
                 onClick={() => {
